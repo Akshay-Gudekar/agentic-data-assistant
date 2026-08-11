@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from langgraph.graph import StateGraph, END
 from agent_state import AgentState
 from nodes import generate_node, execute_node, reflect_node
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     graph = build_graph()
 
     initial_state = {
-        "question": "What's the correlation between fare and survival?",
+        "question": "What percentage of passengers survived?",
         "columns": ["PassengerId", "Survived", "Pclass", "Name", "Sex", "Age",
                     "SibSp", "Parch", "Ticket", "Fare", "Cabin", "Embarked"],
         "code": "",

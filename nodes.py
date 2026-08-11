@@ -1,6 +1,11 @@
 import pandas as pd
 import re
+import os
+from dotenv import load_dotenv
 from agent_state import AgentState
+from e2b_code_interpreter import Sandbox
+
+load_dotenv()
 
 def ask_ollama(prompt, model="llama3.2"):
     import requests
@@ -40,10 +45,6 @@ Code:"""
     return state
 
 def execute_node(state: AgentState) -> AgentState:
-    df = pd.read_csv("data.csv")
-    local_vars = {"df": df, "pd": pd}
-
-    # Strip lines that try to reload data or reimport pandas — df and pd already exist
     code_lines = state["code"].split("\n")
     clean_lines = [
         line for line in code_lines
@@ -51,14 +52,32 @@ def execute_node(state: AgentState) -> AgentState:
     ]
     clean_code = "\n".join(clean_lines)
 
+    sandbox = Sandbox.create(api_key=os.environ.get("E2B_API_KEY"))
+
     try:
-        exec(clean_code, {}, local_vars)
-        state["result"] = str(local_vars.get("result", "No 'result' variable was set"))
-        state["error"] = None
-    except Exception as e:
-        state["error"] = str(e)
-        state["result"] = None
-        print(f"[Attempt {state['attempts']}] FAILED: {state['error']}")
+        with open("data.csv", "rb") as f:
+            sandbox.files.write("/home/user/data.csv", f.read())
+
+        full_code = f"""
+import pandas as pd
+df = pd.read_csv('/home/user/data.csv')
+{clean_code}
+print("RESULT:", result)
+"""
+        execution = sandbox.run_code(full_code)
+
+        if execution.error:
+            state["error"] = f"{execution.error.name}: {execution.error.value}"
+            state["result"] = None
+            print(f"[Attempt {state['attempts']}] FAILED: {state['error']}")
+        else:
+            output = "\n".join(execution.logs.stdout)
+            state["result"] = output
+            state["error"] = None
+
+    finally:
+        sandbox.kill()
+
     return state
 
 def reflect_node(state: AgentState) -> str:
