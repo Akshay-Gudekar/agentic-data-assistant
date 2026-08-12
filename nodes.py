@@ -4,6 +4,11 @@ import os
 from dotenv import load_dotenv
 from agent_state import AgentState
 from e2b_code_interpreter import Sandbox
+import asyncio
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+
 
 load_dotenv()
 
@@ -86,3 +91,18 @@ def reflect_node(state: AgentState) -> str:
     if state["attempts"] >= state["max_attempts"]:
         return "give_up"
     return "retry"
+
+async def _fetch_schema_async(csv_path: str) -> dict:
+    server_params = StdioServerParameters(command="python", args=["mcp_server.py"])
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.call_tool("get_schema", {"csv_path": csv_path})
+            import json
+            return json.loads(result.content[0].text)
+
+def mcp_fetch_node(state: AgentState) -> AgentState:
+    schema = asyncio.run(_fetch_schema_async("data.csv"))
+    state["columns"] = schema["columns"]
+    print(f"[MCP] Fetched schema via MCP: {schema['columns']}")
+    return state

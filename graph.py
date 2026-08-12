@@ -1,26 +1,22 @@
-from dotenv import load_dotenv
-load_dotenv()
 from langgraph.graph import StateGraph, END
 from agent_state import AgentState
-from nodes import generate_node, execute_node, reflect_node
+from nodes import mcp_fetch_node, generate_node, execute_node, reflect_node
 
 def build_graph():
     workflow = StateGraph(AgentState)
 
+    workflow.add_node("mcp_fetch", mcp_fetch_node)
     workflow.add_node("generate", generate_node)
     workflow.add_node("execute", execute_node)
 
-    workflow.set_entry_point("generate")
+    workflow.set_entry_point("mcp_fetch")
+    workflow.add_edge("mcp_fetch", "generate")
     workflow.add_edge("generate", "execute")
 
     workflow.add_conditional_edges(
         "execute",
         reflect_node,
-        {
-            "success": END,
-            "retry": "generate",
-            "give_up": END
-        }
+        {"success": END, "retry": "generate", "give_up": END}
     )
 
     return workflow.compile()
@@ -29,9 +25,8 @@ if __name__ == "__main__":
     graph = build_graph()
 
     initial_state = {
-        "question": "What percentage of passengers survived?",
-        "columns": ["PassengerId", "Survived", "Pclass", "Name", "Sex", "Age",
-                    "SibSp", "Parch", "Ticket", "Fare", "Cabin", "Embarked"],
+        "question": "What's the correlation between fare and survival?",
+        "columns": [],  # no longer hardcoded — mcp_fetch_node fills this in
         "code": "",
         "result": None,
         "error": None,
