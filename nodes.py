@@ -89,16 +89,13 @@ print("RESULT:", result)
             state["error"] = None
 
             if "CHART_SAVED" in output:
-                chart_bytes = sandbox.files.read("/home/user/chart.png")
+                chart_bytes = sandbox.files.read("/home/user/chart.png", format="bytes")
                 local_path = f"chart_{state['attempts']}.png"
                 with open(local_path, "wb") as f:
-                    f.write(chart_bytes if isinstance(chart_bytes, bytes) else chart_bytes.encode())
+                    f.write(chart_bytes)
                 state["chart_path"] = local_path
                 state["result"] = f"A chart was generated to answer: '{state['question']}'. See the attached image."
                 print(f"[Chart saved locally as {local_path}]")
-            else:
-                state["result"] = output
-                state["chart_path"] = None
     finally:
         sandbox.kill()
     return state
