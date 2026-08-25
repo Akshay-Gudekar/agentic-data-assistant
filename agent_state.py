@@ -8,3 +8,4 @@ class AgentState(TypedDict):
     error: Optional[str]
     attempts: int
     max_attempts: int
+    narration: Optional[str]

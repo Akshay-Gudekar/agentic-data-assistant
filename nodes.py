@@ -106,3 +106,16 @@ def mcp_fetch_node(state: AgentState) -> AgentState:
     state["columns"] = schema["columns"]
     print(f"[MCP] Fetched schema via MCP: {schema['columns']}")
     return state
+
+def narrate_node(state: AgentState) -> AgentState:
+    prompt = f"""You are a data analyst explaining findings to a non-technical person.
+
+Original question: "{state['question']}"
+Raw output from the analysis: {state['result']}
+
+Write a short, plain-English answer (2-3 sentences max) that directly answers the question using the actual numbers from the output. Do not mention code, dataframes, or technical terms like "correlation coefficient" without explaining what it means in plain terms. Be direct and specific with numbers.
+
+Answer:"""
+    narration = ask_ollama(prompt, model="llama3.2")
+    state["narration"] = narration.strip()
+    return state
