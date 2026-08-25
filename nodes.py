@@ -58,15 +58,23 @@ def execute_node(state: AgentState) -> AgentState:
     clean_code = "\n".join(clean_lines)
 
     sandbox = Sandbox.create(api_key=os.environ.get("E2B_API_KEY"))
-
     try:
         with open("data.csv", "rb") as f:
             sandbox.files.write("/home/user/data.csv", f.read())
 
         full_code = f"""
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 df = pd.read_csv('/home/user/data.csv')
 {clean_code}
+
+if 'plt' in dir() and plt.get_fignums():
+    plt.savefig('/home/user/chart.png', bbox_inches='tight')
+    print("CHART_SAVED")
+
 print("RESULT:", result)
 """
         execution = sandbox.run_code(full_code)
@@ -74,15 +82,25 @@ print("RESULT:", result)
         if execution.error:
             state["error"] = f"{execution.error.name}: {execution.error.value}"
             state["result"] = None
+            state["chart_path"] = None
             print(f"[Attempt {state['attempts']}] FAILED: {state['error']}")
         else:
             output = "\n".join(execution.logs.stdout)
-            state["result"] = output
             state["error"] = None
 
+            if "CHART_SAVED" in output:
+                chart_bytes = sandbox.files.read("/home/user/chart.png")
+                local_path = f"chart_{state['attempts']}.png"
+                with open(local_path, "wb") as f:
+                    f.write(chart_bytes if isinstance(chart_bytes, bytes) else chart_bytes.encode())
+                state["chart_path"] = local_path
+                state["result"] = f"A chart was generated to answer: '{state['question']}'. See the attached image."
+                print(f"[Chart saved locally as {local_path}]")
+            else:
+                state["result"] = output
+                state["chart_path"] = None
     finally:
         sandbox.kill()
-
     return state
 
 def reflect_node(state: AgentState) -> str:

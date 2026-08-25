@@ -9,3 +9,4 @@ class AgentState(TypedDict):
     attempts: int
     max_attempts: int
     narration: Optional[str]
+    chart_path: Optional[str]

@@ -28,14 +28,15 @@ if __name__ == "__main__":
     graph = build_graph()
 
     initial_state = {
-        "question": "What's the correlation between fare and survival?",
+        "question": "Plot a histogram of passenger ages",
         "columns": [],
         "code": "",
         "result": None,
         "error": None,
         "attempts": 0,
         "max_attempts": 3,
-        "narration": None
+        "narration": None,
+        "chart_path": None
     }
 
     final_state = graph.invoke(initial_state)
@@ -48,5 +49,7 @@ if __name__ == "__main__":
     print(final_state["result"])
     print("--- Narration ---")
     print(final_state["narration"])
+    print("--- Chart path ---")
+    print(final_state["chart_path"])
     print("--- Error ---")
     print(final_state["error"])

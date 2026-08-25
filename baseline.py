@@ -17,7 +17,9 @@ Write Python pandas code to answer this question: "{question}"
 Rules:
 - Assume 'df' already exists, do not reload it
 - Store your final answer in a variable called 'result'
-- Only output code, no explanation, no markdown fences
+- If the question asks for a plot/chart/graph, create it with matplotlib and store a short text description of the chart in 'result' (not the figure object itself)
+- Only output code, no explanation, no markdown fences, no comments about what the code does
+- If the question cannot be answered with the available data, set result to a string explaining why
 
 Code:"""
     code = ask_ollama(prompt, model="codellama")
