@@ -10,7 +10,7 @@ from mcp.client.stdio import stdio_client
 
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 def ask_ollama(prompt, model="llama3.2"):
     import requests
