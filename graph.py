@@ -1,17 +1,19 @@
 from langgraph.graph import StateGraph, END
 from agent_state import AgentState
-from nodes import mcp_fetch_node, generate_node, execute_node, reflect_node, narrate_node
+from nodes import mcp_fetch_node, plan_node, generate_node, execute_node, reflect_node, narrate_node
 
 def build_graph():
     workflow = StateGraph(AgentState)
 
     workflow.add_node("mcp_fetch", mcp_fetch_node)
+    workflow.add_node("plan", plan_node)
     workflow.add_node("generate", generate_node)
     workflow.add_node("execute", execute_node)
     workflow.add_node("narrate", narrate_node)
 
     workflow.set_entry_point("mcp_fetch")
-    workflow.add_edge("mcp_fetch", "generate")
+    workflow.add_edge("mcp_fetch", "plan")
+    workflow.add_edge("plan", "generate")
     workflow.add_edge("generate", "execute")
 
     workflow.add_conditional_edges(
@@ -29,14 +31,19 @@ if __name__ == "__main__":
 
     initial_state = {
         "question": "Plot a histogram of passenger ages",
+        "data_path": "data.csv",
         "columns": [],
+        "dtypes": {},
+        "sample_rows": "",
+        "plan": [],
         "code": "",
         "result": None,
         "error": None,
         "attempts": 0,
         "max_attempts": 3,
         "narration": None,
-        "chart_path": None
+        "chart_path": None,
+        "execution_output": ""
     }
 
     final_state = graph.invoke(initial_state)

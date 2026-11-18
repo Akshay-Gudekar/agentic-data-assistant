@@ -1,0 +1,17 @@
+[
+  {
+    "id": "descriptive-average-age",
+    "question": "What is the average age?",
+    "data_path": "data.csv"
+  },
+  {
+    "id": "exploratory-top-fares",
+    "question": "Show the five highest fares.",
+    "data_path": "data.csv"
+  },
+  {
+    "id": "visualize-age",
+    "question": "Plot a histogram of passenger ages.",
+    "data_path": "data.csv"
+  }
+]
